@@ -1,4 +1,4 @@
-# panelcomics-firstDraft
+# panelcomics - first draft
 Early draft from 2018 of my Panel Comics project. Panel was designed to be a collaborative web comics platform for writers, artists, aids, and fans to come together to create and celebrate great indie comics from creators around the world. A node.js/express.js app running alongside a MongoDB database and an Azure blob storage. Oh, and a vanilla JS front-end with a bit of Bootstrap 5.
 
 ## Stack
