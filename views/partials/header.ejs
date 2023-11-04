@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <% if(css_js != '/comic/new_page'){ %>
+    <meta property="og:title" content="<%=title%> | Panel"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="<%=url%>"/>
+    <meta property="og:image" content="<%=image%>"/>
+    <meta property="og:description" content="<%=description%>"/>
+    <meta property="og:site_name" content="Panel"/>
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:site" content="Panel"/>
+    <% } %>
+    <title><%=title%> | Panel</title>
+    <link rel="icon" href="https://panelapp.blob.core.windows.net/site-images/icon.png" type="image/png">
+    <link rel="stylesheet" href="/css/main.css" type="text/css">
+    <link rel="stylesheet" href="/css/<%=css_js%>.css" type="text/css">
+    <% if(user && user.day == true){ %>
+    <link rel="stylesheet" href="/css/day.css" type="text/css">
+    <% } %>
+    <link href="https://fonts.googleapis.com/css?family=Muli|Oswald:600" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/bb49ba353f.js" crossorigin="anonymous"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/" id="home-link"></a>
+      <button type="button" id="menu-button"><i class="fal fa-ellipsis-h-alt fa-2x"></i></button>
+      <div id="main-menu" <% if(user){ %> class="user" <% } %> >
+        <%  if(!user){ %>
+        <a href="/search" class="nav-link">Search</a>
+        <button type="button" class="nav-link btn-modal" data-modal="user-modal">Login / Signup</button>
+        <% } else { %>
+        <a href="/search" class="nav-link" aria-label="Search">
+          <i class="fad fa-search fa-lg"></i>
+        </a>
+        <a href="/bag" class="nav-link" aria-label="Shopping Bag">
+          <span class="fa-layers fa-fw">
+            <i class="fad fa-bags-shopping fa-lg"></i>
+            <%if(user.bag.length == 0){ %>
+            <span id="bag-counter" class="fa-layers-counter inactive" style="background:#49c49e">0</span>
+            <% } else { %>
+            <span id="bag-counter" class="fa-layers-counter" style="background:#49c49e"><%=user.bag.length%></span>
+            <% } %>
+          </span>
+        </a>
+        <article id="bag-contents">
+          <div id="bag-empty" <% if(user.bag.length > 0){ %> class="inactive" <%}%> >
+            <i class="fad fa-bags-shopping fa-10x" style="opacity: .3; padding: 0 30px; align-self: center; height: 320px"></i>
+            <p>Your bag is empty!</p>
+          </div>
+          <div id="bag-items" <% if(user.bag.length == 0){ %> class="inactive" <% } %>>
+            <% for(let item of user.bag){ %>
+            <span class="bag-item">
+              <p class="bag-item-name">
+                <%=capitalizer(item.name)%>
+                <% if(item.comicName){ %>
+                <br>
+                <small style="font-style:italic; font-size:.6rem">(<%=capitalizer(item.comicName)%>)</small>
+                <% } %>
+              </p>
+              <% if(item.type == 'page'){ %>
+              <a href="/comic/<%=item.comicID%>/page/<%=item.id%>" class="bag-item-link"></a>
+              <% } else { %>
+              <a href="/comic/<%=item.id%>" class="bag-item-link"></a>
+              <% } %>
+              
+              <button type="button" class="bag-item-delete" data-index="<%=user.bag.indexOf(item)%>"><i class="fad fa-trash-alt fa-lg"></i></button>
+            </span>
+            <% } %>
+          </div>
+          <a href="/bag" id="go-to-checkout" <% if(user.bag.length == 0){ %> class="inactive" <%}%> >Checkout</a>
+        </article>
+        <span id="bag-arrow"></span>
+        <div id="bag-block"></div>
+        <a href="/logout" class="nav-link" aria-label="logout">
+          <i class="fad fa-sign-out-alt fa-lg"></i>
+        </a>
+        <a href="/dashboard" class="background profile nav-link">
+          <% if(!user.profile){ %>
+          <i class="fal fa-user fa-lg"></i>
+          <% } else { %>
+          <div class="background profile" style="background-image:url('<%=user.profile.url%>')"></div>
+          <% } %>
+        </a>
+        <% } %>
+      </div>
+    </nav>
+    <main>
+      <% if(query){ %>
+        <% for(let key of Object.keys(query)){ %>
+      <input type="hidden" id="query-<%=key%>" value="<%=query[key]%>">
+        <% } %>
+      <% } %>

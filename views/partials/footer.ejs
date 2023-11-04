@@ -1,0 +1,88 @@
+    </main>
+    <span id="alert-box" class="inactive"></span>
+    <footer>
+      <a href="/" id="footer-home"></a>
+      <a href="/about" class="footer-link">About</a>
+      <a href="/faq" class="footer-link">FAQ</a>
+      <a href="/contact" class="footer-link">Contact</a>
+      <span>
+        <a href="https://twitter.com/panel-comics" class="social-icon"><i class="fab fa-twitter fa-lg fa-fw"></i></a>
+        <a href="https://instagram/panel-comics" class="social-icon"><i class="fab fa-instagram fa-lg fa-fw"></i></a>
+        <a href="https://facebook.com/panel-comics" class="social-icon"><i class="fab fa-facebook-f fa-lg fa-fw"></i></a>
+      </span>
+      <p>
+        <small>
+          <span id="c-right">©<%=new Date().getFullYear()%> Panel, LLC</span>
+          <a href="/legal/tos">Terms</a>
+          |
+          <a href="/legal/privacy">Privacy</a>
+        </small>
+      </p>
+    </footer>
+    <% if(!user){ %>
+    <article id="user-modal" class="modal inactive">
+      <div class="modal-body">
+        <span id="user-modal-curve"></span>
+        <!-- <header id="user-modal-header">
+          <h1>Login</h1>
+          <h2>Welcome Back!</h2>
+        </header> -->
+        <form id="login-form">
+          <header id="user-modal-header">
+            <h1>Login</h1>
+            <h2>Welcome Back!</h2>
+          </header>
+          <div class="input-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" class="input" name="email" required >
+            <span class="line"></span>
+          </div>
+          <div class="input-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" class="input" name="password" min-length="8"  required>
+            <span class="line"></span>
+          </div>
+          <button type="button" id="login-form-submit" class="btn btn-purple btn-lg btn-block btn-submit" form="login-form" data-method="post" data-url="/user/login">Login</button>
+          <p>Need an account? <button type="button" class="btn-switch btn btn-link" data-show="signup-form" data-hide="login-form">Sign Up Here.</button></p>
+        </form>
+        <form id="signup-form" class="inactive">
+          <header id="user-modal-header">
+            <h1>Signup</h1>
+            <h2>Glad You're Here!</h2>
+          </header>
+          <label for="catch-me-baby" class="hidden">Please do not fill this out. This is for bots only.</label>
+          <input type="text" id="catch-me-baby" class="hidden" name="catch" autocomplete="off">
+          <div class="input-group">
+            <label for="signup-email">Email</label>
+            <input type="email" id="signup-email" class="input-text input" name="email" required>
+            <i id="signup-email-icon" class="fad fa-lg fa-fw fa-check-circle input-icon text-green inactive"></i>
+            <span class="line"></span>
+          </div>
+          <p id="signup-email-error" class="input-error" tabindex="-1">That email is in use.</p>
+          <div id="signup-password-ig" class="input-group">
+            <label for="signup-password">Password</label>
+            <input type="password" id="signup-password"  class="input" name="password" minlength="8" title="Your password needs to have an uppercase letter, a number and be more than 8 characters." required>
+            <i class="far fa-check-circle fa-lg fa-fw inactive input-icon" style="color: #49c49e"></i>
+            <span class="line"></span>
+          </div>
+          <p class="input-error" tabindex="-1">Your password does not meet the requirements.</p>
+          <div id="password-requirements">
+            <p style="margin-top: 0">Passwords need to have:</p>
+            <p class="form-small">At least 8 characters</p>
+            <p class="form-small">An Uppercase Letter</p>
+            <p class="form-small">A Number</p>
+          </div>
+          <p class="disclaimer">By clicking the button below, you agree to our <a href="/legal/tos">Terms of Service</a></p>
+          <button type="button" id="signup-form-submit" class="btn btn-purple btn-lg btn-block btn-submit" form="signup-form" data-method="post" data-url="/user/signup">Signup</button>
+          <p>Have an account? <button type="button" class="btn-switch btn btn-link" data-show="login-form" data-hide="signup-form">Login here.</button></p>
+        </form>
+      </div>
+    </article>
+    <% } %>
+  </body>
+  <script src="/js/main.js" type="text/javascript"></script>
+  <% if(!user){ %>
+  <script src="/js/login.js" type="text/javascript"></script>
+  <% } %>
+  <script src="/js/<%=css_js%>.js" type="text/javascript"></script>
+</html>

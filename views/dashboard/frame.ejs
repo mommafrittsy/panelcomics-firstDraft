@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <title>Your Dashboard | Panel</title>
+    <link rel="icon" href="https://panelapp.blob.core.windows.net/site-images/icon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css?family=Muli|Oswald:600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/dashboard/frame.css" type="text/css">
+    <link rel="stylesheet" href="/css/dashboard/comics.css" type="text/css">
+    <link rel="stylesheet" href="/css/dashboard/purchases.css" type="text/css">
+    <link rel="stylesheet" href="/css/dashboard/financials.css" type="text/css">
+    <!-- <link rel="stylesheet" href="/css/dashboard/ads.css" type="text/css"> -->
+    <link rel="stylesheet" href="/css/dashboard/settings.css" type="text/css">
+    <link rel="stylesheet" href="/css/dashboard/messages.css" type="text/css">
+    <link rel="stylesheet" href="/css/dashboard/notifications.css" type="text/css">
+    <% if(user.day == true){ %>
+    <link rel="stylesheet" href="/css/dashboard/day.css" type="text/css">
+    <% } %>
+    <script src="https://kit.fontawesome.com/f072fd772b.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+  </head>
+</html>
+<body>
+  <% for(let key of Object.keys(query)){ %>
+    <input type="hidden" id="query-<%=key%>" value="<%=query[key]%>">
+  <% } %>
+  <header id="nav-top">
+    <button type="button" id="comic-show-all" class="show-all inactive"><i class="far fa-arrow-left fa-lg"></i><span>All Comics</span></button>
+    <button type="button" id="advert-show-all" class="show-all inactive"><i class="far fa-arrow-left fa-lg"></i><span>All Adverts</span></button>
+    <span role="navigation">
+      <p class="hidden" id="settings-label">View and Set User Settings</p>
+      <p class="hidden" id="notifications-label">View and Manage Notifications</p>
+      <button type="button" class="nav-button header-icon" data-section="settings" aria-labelledby="settings-label"><i class="fad fa-user-cog fa-2x"></i></button>
+      <button type="button" class="nav-button header-icon" data-section="notifications" aria-labelledby="notifications-label"><i class="fad fa-bell fa-2x"></i></button>
+      <a href="/logout" class="nav-button header-icon" style="font-size:.73rem; padding-left: 10px"><i class="fad fa-sign-out-alt fa-2x"></i></a>
+    </span>
+    <a href="/<%=user.publicID%>">
+      <% if(!user.profile){ %>
+      <i class="fal fa-user fa-lg"></i>
+      <% } else { %>
+      <span class="background profile" style="background-image:url('<%=user.profile.url%>')"></span>
+      <% } %>
+    </a>
+  </header>
+  <nav>
+    <a href="/"></a>
+    <% if(['basic', 'premium'].includes(user.subscriptionLevel.subType)){ %>
+    <span role="button" id="advert-navigation-btn" class="nav-button" data-section="adverts" aria-labelledby="advert-navigation-label">
+      <span class="active-bar"></span>
+      <i class="fad fa-tv-retro fa-lg fa-fw"></i>
+      <span class="btn-name" id="advert-navigation-label">Your Adverts</span>
+    </span>
+    <% } %>
+    <span role="button" id="comic-navigation-btn" class="nav-button active" data-section="comics" aria-labelledby="comic-navigation-label">
+      <span class="active-bar"></span>
+      <i class="fad fa-books fa-lg fa-fw"></i>
+      <span class="btn-name" id="comic-navigation-label">Your Comics</span>
+    </span>
+    <span role="button" id="financial-navigation-btn" class="nav-button" data-section="financials" aria-labelledby="financial-navigation-label">
+      <span class="active-bar"></span>
+      <i class="fad fa-wallet fa-lg fa-fw"></i>
+      <span class="btn-name" id="financial-navigation-label">Financials</span>
+    </span>
+    <% if(user.comics.following.length > 0){ %>
+    <span role="button" id="following-navigation-btn" class="nav-button" data-section="following" aria-labelledby="following-navigation-label">
+      <span class="active-bar"></span>
+      <i class="fad fa-binoculars fa-lg fa-fw"></i>
+      <span class="btn-name" id="following-navigation-label">Comics You Follow</span>
+    </span>
+    <% } %>
+    <% if(user.comics.purchased.length > 0){ %>
+    <span role="button" id="purchases-navigation-btn" class="nav-button" data-section="purchases" aria-labelledby="purchases-navigation-label">
+      <span class="active-bar"></span>
+      <i class="fad fa-receipt fa-lg fa-fw"></i>
+      <span class="btn-name" id="purchases-navigation-label">Purchased Comics</span>
+    </span>
+    <% } %>
+  </nav>
+  <main>
+    <% if(user.login.verified != true){ %>
+      <span class="alert success" id="verify-alert"><i class="fad fa-exclamation-triangle fa-2x"></i>Please verify <%=user.email%> <button type="button" class="btn btn-link" id="resend-verification">Resend Verification</button></span>
+      <% } %>
+      <% include ./comics %>
+      <% include ./financials %>
+      <% if(user.comics.following.length > 0){ %>
+      <% include ./following %>
+      <% } %>
+      <%if(user.comics.purchased.length > 0){ %>
+        <% include ./purchases %>
+      <% } %>
+      <%if(['basic', 'premium'].includes(user.subscriptionLevel.subType)){ %>
+        <% include ./adverts %>
+      <% } %>
+      <% include ./settings %>
+      <% include ./notifications %>
+      <span id="alert-box" class="inactive" role="alert"></span>
+  </main>
+  <% if(user.comics.admin.length < user.subscriptionLevel.limits.comics){ %>
+    <article id="comic-new-modal" class="modal small inactive" role="dialog" tabindex="-1">
+      <div class="modal-body">
+        <div class="modal-header">
+          <h1>Create a New Comic</h1>
+          <button type="button" class="close-modal" data-modal="comic-new-modal">&times;</button>
+        </div>
+        <form id="comic-new-form">
+          <div class="uploader" data-restriction="image" data-multiple="false" data-maxsize="25000000"
+          data-meter="comic-new-meter">
+            <i class="fad fa-cloud-upload-alt fa-3x"></i>
+            <p>Drop your banner image here or <label for="comic-banner-upload">Browse your images</label></p>
+            <p class="disclaimer">You can upload one image file up to 25MB.</p>
+            <div id="comic-new-meter" class="meter inactive">
+              <span>
+                <span>Uploading Banner...</span>
+              </span>
+            </div>
+            <div class="previews">
+              <p class="disclaimer inactive" style="text-align: center;">Click on a file to remove it.</p>
+            </div>
+            <input type="file" id="comic-banner-upload" class="hidden file-input" accept="image/*" data-restriction="image" data-multiple="false" data-maxsize="25000000"
+            data-meter="comic-new-meter">
+          </div>
+          <div class="input-group">
+            <label for="comic-new-title">Title</label>
+            <input type="text" id="comic-new-title" class="input" name="title" autocomplete="off">
+            <span class="line"></span>
+          </div>
+          <div class="input-group textarea">
+            <label for="comic-new-summary">Summary<br><small style="font-size: .6rem">(Max 300 Characters)</small></label>
+            <textarea id="comic-new-summary" class="input" name="summary" maxlength="300" autocomplete="off"></textarea>
+            <span class="line"></span>
+          </div>
+          <div class="input-group">
+            <label for="comic-new-website">Comic Website</label>
+            <input id="comic-new-website" class="input" name="website" autocomplete="off">
+            <span class="line"></span>
+          </div>
+          <div class="input-group label">
+            <p>Monetize Access</p>
+            <input type="radio" id="comic-new-monetize-true" name="monetize" autocomplete="off" value="true">
+            <label for="comic-new-monetize-true" class="btn-switch" data-show="comic-new-monetize-options">Yes</label>
+            <input type="radio" id="comic-new-monetize-false" name="monetize" autocomplete="off" value="false">
+            <label for="comic-new-monetize-false" class="btn-switch" data-hide="comic-new-monetize-options">No</label>
+          </div>
+          <article id="comic-new-monetize-options" class="inactive" style="padding:10px">
+            <p>Monetization Options</p>
+            <div class="input-group label">
+              <p>Monetize:</p>
+              <input type="radio" autocomplete="off" id="comic-new-monetize-style-whole-input" name="style" value="comic">
+              <label for="comic-new-monetize-style-whole-input" class="btn-switch" data-hide="comic-new-monetize-style-page">Whole Comic</label>
+              <input type="radio" id="comic-new-monetize-style-page-input" autocomplete="off" name="style" value="page">
+              <label for="comic-new-monetize-style-page-input" class="btn-switch" data-show="comic-new-monetize-style-page">Each Page</label>
+            </div>
+            <div class="input-number-holder">
+              <div class="input-group number">
+                <label for="comic-new-monetize-price">Price (USD)</label>
+                <input type="number" min="0" step=".01" id="comic-new-monetize-price" class="input" name="price" autocomplete="off">
+                <i class="fad fa-dollar-sign fa-lg input-icon"></i>
+                <span class="line"></span>
+              </div>
+              <div class="input-group number">
+                <label for="comic-new-monetize-free">Free Pages</label>
+                <input type="number" min="0" id="comic-new-monetize-free" class="input" name="free" autocomplete="off">
+                <i class="input-icon fad fa-thumbs-up fa-lg"></i>
+                <span class="line"></span>
+              </div>
+            </div>
+            <article id="comic-new-monetize-style-page" class="inactive">
+              <p style="margin-top: 15px">Bulk Discount?</p>
+              <div class="input-number-holder">
+                <div class="input-group number">
+                  <label for="comic-new-monetize-bulk-items">Items Required</label>
+                  <input type="number" id="comic-new-monetize-bulk-items" min="0" class="input" name="bulk_items" autocomplete="off">
+                  <i class="fad fa-cart-plus fa-lg input-icon"></i>
+                  <span class="line"></span>
+                </div>
+                <div class="input-group number">
+                  <label for="comic-new-monetize-bulk-amount">Discount Amount</label>
+                  <input type="number" id="comic-new-monetize-bulk-amount" class="input" min="0" max="25" name="bulk_discount" autocomplete="off">
+                  <i class="input-icon fad fa-percentage fa-lg"></i>
+                  <span class="line"></span>
+                </div>
+              </div>
+            </article>
+          </article>
+        </form>
+        <div class="modal-footer">
+          <button type="button" class="close-modal form-clear btn" data-modal="comic-new-modal" form="comic-new-form">Nevermind</button>
+          <button type="button" id="comic-new-submit" class="btn btn-green" form="comic-new-form">Create Comic</button>
+        </div>
+      </div>
+    </article>
+  <% } %>
+  <article id="member-new-modal" class="modal small inactive" role="dialog" tabindex="-1">
+    <div class="modal-body">
+      <div class="modal-header">
+        <h1>Add Members to <span id="member-new-comic-title"></span></h1>
+        <button type="button" class="close-modal" data-modal="member-new-modal">&times;</button>
+      </div>
+      <div id="member-new-input-group" class="input-group">
+        <label for="member-new-username">Username</label>
+        <input type="text" id="member-new-username" class="input" autocomplete="off" name="username">
+        <ul id="member-new-results" class="user-ul"></ul>
+        <span class="line"></span>
+      </div>
+      <ul id="member-new-list" class="user-ul"></ul>
+      <div class="modal-footer">
+        <button type="button" id="member-new-reset" class="close-modal btn" data-modal="member-new-modal">Nevermind</button>
+        <button type="button" id="member-new-submit" class="btn btn-green">Add Members</button>
+      </div>
+    </div>
+  </article>
+  <article id="member-info-modal" class="modal small inactive" role="dialog" tabindex="-1">
+    <div class="modal-body">
+      <div class="modal-header">
+        <h1><span class="member-info-username"></span> Settings</h1>
+        <button type="button" id="member-info-close" class="close-modal" data-modal="member-info-modal">&times;</button>
+      </div>
+      <form id="member-info-form">
+        <h2>Status</h2>
+        <p id="member-info-status"></p>
+        <h2 id="can-upload-header">Can Upload <i class="fal fa-question-circle fa-sm help"></i>
+          <span class="help-box">When active, <span class="member-info-username"></span> will be allowed to upload non-page files (scripts, concept art, bonus files, etc.) to this comic. Any uploads will count against the comic admin's data limit. Page files can be uploaded by all members.
+          </span></h2>
+          <label for="can-upload-input" class="toggle toggle-lg" style="margin:0;margin-left:15px">
+            <input type="checkbox" id="can-upload-input" class="toggle-input inactive" autocomplete="off" name="upload">
+            <div class="toggle-switch"></div>
+            <span class="toggle-span"></span>
+            <span class="toggle-active"></span>
+            <span class="toggle-inactive"></span>
+          </label>
+        <h2>Role</h2>
+        <div class="input-group label" style="margin-left: 15px;">
+          <%for(let role of ['artist', 'background_artist', 'character_artist', 'concept_artist', 'editor', 'lead_artist', 'writer']){ %>
+            <input type="checkbox" id="member-info-role-<%=role.replace('_', '-')%>" class="hidden input-role" name="role" value="<%=role%>" autocomplete="off">
+            <label for="member-info-role-<%=role.replace('_', '-')%>"><%=capitalizer(role.replace('_', ' '))%></label>
+          <% } %>
+        </div>
+      </form>
+      <div id="member-info-remove" class="inactive">
+        <h2>Remove <span class="member-info-username"></span> <i class="fal fa-question-circle fa-sm help"></i>
+        <span class="help-box">
+          This will immediately remove <span class="member-info-username"></span> from this comic. <span class="member-info-username"></span> will no longer have access to the comic in their dashboard.
+        </span>
+        </h2>
+        <button type="button" id="member-info-remove-btn" style="background:#ff4d4d; border-color:#ff4d4d;margin-left:15px">Remove <span class="member-info-username"></span></button>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="member-info-submit" class="btn btn-green" form="member-info-form">Update <span class="member-info-username"></span></button>
+      </div>
+    </div>
+  </article>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>var socket = io();</script>
+  <script src="/js/main.js"></script>
+  <script src="/js/dashboard/frame.js"></script>
+  <script src="/js/dashboard/comics.js"></script>
+  <script src="/js/dashboard/ads.js"></script>
+  <script src="/js/dashboard/settings.js"></script>
+  <script src="/js/dashboard/notifications.js"></script>
+  <script src="/js/dashboard/messages.js"></script>
+  <script src="/js/dashboard/financials.js"></script>
+</body>

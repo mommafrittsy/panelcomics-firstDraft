@@ -1,0 +1,95 @@
+<% include partials/header %>
+
+  <% if(owner.banner){ %>
+<style>
+  header {
+    background-image: linear-gradient(to right, rgba(0,0,0,.4), rgba(0,0,0,.4)), url('<%=owner.banner.url%>');
+  }
+</style>
+  <% } %>
+  <% if(owner.profile){ %>
+<style>
+  #profile-bubble {
+    background-image: url('<%=owner.profile.url%>');
+  }
+</style>
+  <% } %>
+
+<header class="background">
+  <span id="profile-bubble" class="background"></span>
+  <h1><%=capitalizer(owner.username)%></h1>
+</header>
+<span id="btn-row">
+  <p class="user-btn">Member Since <%=dateStringer(owner.login.registered, 'month')%></p>
+</span>
+<article id="user-info">
+  <%if(owner.biography){ %>
+  <article id="user-bio">
+    <h2 style="background-image:linear-gradient(-240deg, #00c9ff, #92fe9d)">All About <%=capitalizer(owner.username)%></h2>
+    <section style="padding: 30px">
+      <p><%=owner.biography%></p>
+    </section>
+  </article>
+  <% } %>
+  <article id="social-btns">
+    <% for(let key of Object.keys(owner.social)){ %>
+      <%if(owner.social[key] && key != "$init"){ %>
+        <%if(key == 'tumblr'){ %>
+    <a href="<%=`https://${owner.social.tumblr}.tumblr.com/`%>" class="social-btn">
+      <i class="fab fa-tumblr fa-lg"></i>
+    </a>      
+        <% } else if(key == 'youtube'){ %>
+    <a href="<%=`https://youtube.com/user/${owner.social.youtube}`%>" class="social-btn">
+      <i class="fab fa-youtube fa-lg"></i>
+    </a>          
+        <% } else { %>
+    <a href="<%=`https://${key}.com/${owner.social[key]}`%>" class="social-btn">
+      <i class="fab fa-<%=key%> fa-lg"></i>
+    </a>          
+        <% } %>
+      <% } %>
+    <% } %>
+  </article>
+  <% if(comics.length > 0){ %>
+  <article>
+    <h2 style="background-image:linear-gradient(to left, #8a2387, #e94057, #f27121)">
+    Created</h2>
+    <section>
+      <% for(let comic of comics){ %>
+      <a href="/comic/<%=comic.pubID%>" class="comic-link">
+        <span class="comic-cover background" style="background-image:url('<%=comic.banner.url%>')"></span>
+        <span>
+          <%=capitalizer(comic.title)%>
+        </span>
+      </a>
+      <% } %>
+    </section>
+  </article>
+  <% } %>
+  <% if(following.length > 0){ %>
+  <article>
+    <h2 style="background-image:linear-gradient(-240deg,#9f3bfc,#cf3bfc)">Following</h2>
+    <% for(let comic of following){ %>
+    <a href="/comic/<%=comic.pubID%>" class="comic-link">
+      <span class="comic-cover background" style="background-image:url('<%=comic.banner.url%>')"></span>
+      <span><%=capitalizer(comic.title)%></span>
+    </a>
+    <% } %>
+  </article>
+  <% } %>
+  <% if(recent.length > 0){ %>
+  <article >
+    <h2 style="background: linear-gradient(to right, #6dd5ed, #2193b0);">Reading</h2>
+    <% for(let comic of recent){ %>
+    <a href="/comic/<%=comic.pubID%>" class="comic-link">
+      <span class="comic-cover background" style="background-image:url('<%=comic.banner.url%>')"></span>
+      <span>
+        <%=capitalizer(comic.title)%>
+      </span>
+    </a>
+    <% } %>
+  </article>
+  <% } %>
+</article>
+
+<% include partials/footer %>

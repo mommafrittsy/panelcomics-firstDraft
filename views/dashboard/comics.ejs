@@ -1,0 +1,521 @@
+<article class="dash-section" id="comics">
+  <% if(user.subscriptionLevel.limits.comics > user.comics.admin.length){ %>
+  <button type="button" class="add-btn btn btn-green btn-outline btn-modal" id="add-comic" style="margin-left: 15px" data-modal="comic-new-modal"><i class="far fa-plus fa-lg"></i>Create a New Comic</button>
+  <% } %>
+  <div id="comic-btns">
+    <% for(let comic of comics){ %>
+    <span role="button" class="dash-comic block" data-comic="<%=comic._id%>" data-index="<%=comics.indexOf(comic)%>">
+      <span class="comic-banner" style="background-image:url('<%=comic.banner.url%>')"></span>
+      <span class="comic-slant"></span>
+      <div class="bubbles">
+        <% if(comic.purchases.length > 0){ %>
+          <% let newPurchases = 0 %>
+          <% for(let purchase of comic.purchases){ %>
+            <% if(purchase.date > user.login.mostRecent){ %>
+              <% newPurchases ++ %>
+            <% } %>
+          <% } %>
+          <% if(newPurchases > 0) { %>
+        <p class="comic-bubble comic-purchases"><i class="far fa-shopping-basket fa-fw"></i><%=newPurchases%></p>
+          <% } %>
+        <% } %>
+        <% let newMessages = 0 %>
+        <% for(let message of comic.messages){ %>
+          <% if(message.date > user.login.mostRecent && message.user._id.toString() != user._id.toString()){ %>
+            <% newMessages ++ %>
+          <% } %>
+        <% } %>
+        <% if(newMessages > 0) { %>
+      <p class="comic-bubble comic-messages" id="message-bubble-<%=comics.indexOf(comic)%>"><i class="far fa-comments fa-fw"></i><span id="new-messages-<%=comics.indexOf(comic)%>" data-messages="<%=newMessages%>"><%=newMessages%></span></p>
+        <% } else { %>
+      <p class="comic-bubble comic-messages inactive" id="message-bubble-<%=comics.indexOf(comic)%>"><i class="far fa-comments fa-fw"></i><span id="new-messages-<%=comics.indexOf(comic)%>" data-messages="0">0</span></p>
+        <% } %>
+        <% if(comic.mature == true){ %>
+      <p class="comic-bubble" style="background-color: #ff4d4d; padding:6px 12px">Mature</p>
+        <% } %>
+      </div>
+      <div class="comic-info">
+        <p class="comic-date">Last Updated:<br> <%=dateStringer(comic.dates.updated.date, 'day')%></p>
+        <h1 class="comic-title"><%=comic.title%></h1>
+        <p class="comic-summary">
+          <% if(comic.summary.length > 150){ %>
+            <%=comic.summary.substring(0, 150)%>...
+          <% } else { %>
+            <%=comic.summary%>
+          <% } %>
+        </p>
+      </div>
+    </span>
+    <% } %>
+  </div>
+  <% for(let comic of comics){ %>
+  <article id="comic-<%=comic._id%>" class="comic inactive">
+    <% let index = comics.indexOf(comic); %>
+    <% let memNum; %>
+    <% for(let mem of comic.members){ %>
+      <% if(mem.user._id.toString() == user._id.toString()){ %>
+        <% memNum = comic.members.indexOf(mem)%>
+      <% } %>
+    <% } %>
+    <article class="comic-details block">
+      <span class="details-banner" id="comic-<%=index%>-banner" style="background-image:url('<%=comic.banner.url%>')"></span>
+      <div class="details-info">
+        <header class="detail-header">
+          <h1 class="detail-title"><a href="/comics/<%=comic.public_id%>"><%=capitalizer(comic.title)%></a></h1>
+          <% if(comic.admin._id.toString() == user._id.toString()){ %>
+          <div class="help-toggle-holder">
+            <p>
+              Comic Active
+              <i class="fal fa-question-circle fa-sm help"></i>
+              <span class="help-box">Comics can be made inactive when you are finished with them or when you need a hiatus. Making a comic inactive, allows users to read your comic, but the comic no longer counts toward your subscription limits. It also lets users know not to expect new content for the timebeing.
+              </span>
+            </p>
+            <label for="active-input-<%=index%>" class="toggle toggle-lg" style="margin:0;margin-left:auto">
+              <%if(comic.active == false){ %>
+                <input type="checkbox" id="active-input-<%=index%>" class="toggle-input inactive property-toggle" autocomplete="off" data-id="<%=comic._id%>" name="active">
+              <% } else { %>
+                <input type="checkbox" id="active-input-<%=index%>" class="toggle-input inactive property-toggle" checked autocomplete="off" data-id="<%=comic._id%>" name="active">
+              <% } %>
+              <div class="toggle-switch"></div>
+              <span class="toggle-span"></span>
+              <span class="toggle-active"></span>
+              <span class="toggle-inactive"></span>
+            </label>
+          </div>
+            <% if(user.birthdate && user.birthdate < (Date.now() - 568036800000)){ %>
+          <div class="help-toggle-holder">
+            <p style="position: relative; margin: 0">
+              Mature Content
+              <i class="fal fa-question-circle fa-sm help"></i>
+              <span class="help-box">Comics should be marked as containing mature content if the overall topic covers, or a majority of the pages will contain, mature content. If only certain pages contain mature content, you may set those pages accordingly. Users under the age of 18 will not be able to view mature content.</span>
+              </span>
+            </p>
+            <label for="mature-input-<%=index%>" class="toggle toggle-lg" style="margin:0;margin-left:auto">
+              <%if(comic.mature == false){ %>
+                <input type="checkbox" id="mature-input-<%=index%>" class="toggle-input inactive property-toggle" autocomplete="off" name="mature" data-id="<%=comic._id%>">
+              <% } else { %>
+                <input type="checkbox" id="mature-input-<%=index%>" class="toggle-input inactive property-toggle" checked autocomplete="off" name="mature" data-id="<%=comic._id%>">
+              <% } %>
+              <div class="toggle-switch"></div>
+              <span class="toggle-span"></span>
+              <span class="toggle-active"></span>
+              <span class="toggle-inactive"></span>
+            </label>
+          </div>  
+            <% } %>
+          <% } else { %>
+            <% if(comic.active == false){ %>
+          <span class="badge badge-green">Inactive</span>
+            <% } %>
+            <% if(comic.mature == true){ %>
+          <span class="badge badge-red">Mature</span>
+            <% } %>
+          <% } %>
+          <h2>
+            <span class="detail-stat"><i class="fas fa-eye fa-lg"></i><%=comic.views%></span>
+            <span class="detail-stat"><i class="fas fa-users-medical fa-lg"></i><%=comic.followers.length%></span>
+          </h2>
+        </header>
+        <% if(comic.admin._id.toString() == user._id.toString()){ %>
+        <form id="comic-<%=index%>-details-form">
+          <div class="uploader" data-restriction="image" data-multiple="false" data-maxsize="25000000"
+          data-meter="comic-new-meter">
+            <i class="fad fa-cloud-upload-alt fa-3x"></i>
+            <p>Drop a new banner image here or <label for="comic-<%=index%>-banner-upload">Browse your images</label></p>
+            <p class="disclaimer">You can upload one image file up to 25MB.</p>
+            <div id="comic-new-meter" class="meter inactive">
+              <span>
+                <span>Uploading Banner...</span>
+              </span>
+            </div>
+            <div class="previews" id="comic-<%=index%>-banner-preview">
+              <p class="disclaimer inactive" style="text-align: center;">Click on a file to remove it.</p>
+            </div>
+            <input type="file" id="comic-<%=index%>-banner-upload" class="hidden file-input" accept="image/*" data-restriction="image" data-multiple="false" data-maxsize="25000000"
+            data-meter="comic-new-meter">
+          </div>
+          <div class="input-group">
+            <label for="comic-<%=index%>-title-input">Title</label>
+            <input type="text" id="comic-<%=index%>-title-input" class="input" name="title" value="<%=capitalizer(comic.title)%>">
+            <span class="line"></span>
+          </div>
+          <div class="input-group textarea">
+            <label for="comic-<%=index%>-summary-input">Summary</label>
+            <textarea id="comic-<%=index%>-summary-input" class="input" name="summary"><%=comic.summary%></textarea>
+            <span class="line"></span>
+          </div>
+          <div class="input-group">
+            <label for="comic-<%=index%>-website-input">Website URL</label>
+            <input type="text" id="comic-<%=index%>-website-input" class="input" name="website" value="<%=comic.website%>">
+            <span class="line"></span>
+          </div>
+          <hr>
+          <div class="update-schedule">
+            <p>Update Frequency <small>(Optional)</small></p>
+            <div class="input-group label">
+              <% for(let type of ['weekly', 'biweekly', 'monthly', 'as-available']){ %>
+                <% if((!comic.schedule.style && type == 'as-available') || comic.schedule.style == type){ %>
+              <input type="radio" id="<%=type%>-<%=index%>-update-input" name="schedule" value="<%=type%>" autocomplete="off" checked>
+                <% } else { %>
+              <input type="radio" id="<%=type%>-<%=index%>-update-input" name="schedule" value="<%=type%>" autocomplete="off">    
+                <% } %>
+                <% if(['weekly', 'biweekly'].includes(type)){ %>
+              <label for="<%=type%>-<%=index%>-update-input" class="schedule-type-switch" data-show="weekly-<%=index%>-update"><%=capitalizer(type.replace('-',' '))%></label>
+                <% } else { %>
+              <label for="<%=type%>-<%=index%>-update-input" class="schedule-type-switch" data-show="<%=type%>-<%=index%>-update"><%=capitalizer(type.replace('-',' '))%></label>
+                <% } %>
+              <% } %>
+            </div>
+            <% if(['weekly', 'biweekly'].includes(comic.schedule.style)){ %>
+            <div id="weekly-<%=index%>-update" class="input-group label update-calendar" style="margin:30px 15px;">
+            <% } else { %>
+            <div id="weekly-<%=index%>-update" class="input-group label update-calendar inactive" style="margin:30px 15px;">
+            <% } %>
+              <% for(let day of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']){ %>
+                <% if(comic.schedule.times.includes(day)){ %>
+              <input type="checkbox" id="<%=day%>-<%=index%>-update" name="day" value="<%=day%>" checked>  
+                <% } else { %>
+              <input type="checkbox" id="<%=day%>-<%=index%>-update" name="day" value="<%=day%>">
+                <% } %>
+              <label for="<%=day%>-<%=index%>-update"><%=day%></label>
+              <% } %>
+            </div>
+            <% if(comic.schedule && comic.schedule.style == 'monthly'){ %>
+            <div id="monthly-<%=index%>-update" class="input-group label update-calendar" style="margin:30px 15px;">
+            <% } else { %>
+            <div id="monthly-<%=index%>-update" class="input-group label update-calendar inactive" style="margin:30px 15px;">
+            <% } %>
+              <% for(let i = 1; i <= 31; i++){ %>
+                <% if(comic.schedule.times.includes(i)){ %>
+              <input type="checkbox" id="<%=i%>-<%=index%>-update" name="day" value="<%=i%>" checked>
+                <% } else { %>
+              <input type="checkbox" id="<%=i%>-<%=index%>-update" name="day" value="<%=i%>">
+                <% } %>
+              <label for="<%=i%>-<%=index%>-update" style="padding:5px 0; width: 30px"><%=i%></label>
+              <% } %>
+            </div>
+          </div>
+          <% if(!user.country.code || (user.country.code && countries.stripe.codes.includes(user.country.code))){ %>
+          <hr>
+          <div class="monetization">
+            <div class="input-group label">
+              <p>Monetize Access?</p>
+              <p class="disclaimer">You must be a resident of one of <a href="https://stripe.com/global">these countries</a> to monetize access to your comic.</p>
+              <% if(comic.monetization &&comic.monetization.status == 'pending'){ %>
+              <p style="margin: 15px 0">Your request is pending. You may update it at any time.</p>
+              <% } else if(comic.monetization && comic.monetization.status == 'rejected') { %>
+              <p style="margin: 15px 0">Your request was rejected. Please update it to correct any errors.</p>
+              <% } %>
+              <% if(comic.monetization){ %> 
+              <input type="radio" id="<%=index%>-monetize-true" name="monetize" autocomplete="off" value="true" checked>
+              <label for="<%=index%>-monetize-true" class="btn-switch" data-show="<%=index%>-monetize-details">Yes</label>
+              <input type="radio" id="<%=index%>-monetize-false" name="monetize" autocomplete="off" value="false">
+              <label for="<%=index%>-monetize-false" class="btn-switch" data-hide="<%=index%>-monetize-details">No</label>
+              <% } else { %>
+              <input type="radio" id="<%=index%>-monetize-true" name="monetize" autocomplete="off" value="true">
+              <label for="<%=index%>-monetize-true" class="btn-switch" data-show="<%=index%>-monetize-details">Yes</label>
+              <input type="radio" id="<%=index%>-monetize-false" name="monetize" autocomplete="off" value="false" checked>
+              <label for="<%=index%>-monetize-false" class="btn-switch" data-hide="<%=index%>-monetize-details">No</label>
+              <% } %> 
+              <div class="monetize-details input-group label" id="<%=index%>-monetize-details">
+                <p>Monetize:</p>
+                <% if(comic.monetization){ %>
+                  <% if(comic.monetization.style == 'comic'){ %>
+                <input type="radio" autocomplete="off" id="<%=index%>-whole-input" name="style" value="comic" checked>
+                <label for="<%=index%>-whole-input" class="btn-switch" data-hide="<%=index%>-page-details">Whole Comic</label>
+                <input type="radio" id="<%=index%>-page-input" autocomplete="off" name="style" value="page">
+                <label for="<%=index%>-page-input" class="btn-switch" data-show="<%=index%>-page-details">Each Page</label>
+                  <% } else { %>
+                <input type="radio" autocomplete="off" id="<%=index%>-whole-input" name="style" value="comic">
+                <label for="<%=index%>-whole-input" class="btn-switch" data-hide="<%=index%>-page-details">Whole Comic</label>
+                <input type="radio" id="<%=index%>-page-input" autocomplete="off" name="style" value="page" checked>
+                <label for="<%=index%>-page-input" class="btn-switch" data-show="<%=index%>-page-details">Each Page</label>
+                  <% } %>
+                <% } else { %>
+                <input type="radio" autocomplete="off" id="<%=index%>-whole-input" name="style" value="comic">
+                <label for="<%=index%>-whole-input" class="btn-switch" data-hide="<%=index%>-page-details">Whole Comic</label>
+                <input type="radio" id="<%=index%>-page-input" autocomplete="off" name="style" value="page">
+                <label for="<%=index%>-page-input" class="btn-switch" data-show="<%=index%>-page-details">Each Page</label>
+                <% } %> 
+                <div class="input-number-holder">
+                  <div class="input-group number">
+                    <label for="<%=index%>-price">Price (USD)</label>
+                    <input type="number" min="0" step=".01" id="<%=index%>-price" class="input" name="price" <%if(comic.monetization){%> value="<%=(comic.monetization.cost/100).toFixed(2)%>" <%}  %> >
+                    <i class="fad fa-dollar-sign fa-lg input-icon"></i>
+                    <span class="line"></span>
+                  </div>
+                  <div class="input-group number">
+                    <label for="<%=index%>-free">Free Pages</label>
+                    <input type="number" min="0" id="<%=index%>-free" class="input" name="free" <% if(comic.monetization){ %> value="<%=comic.monetization.free%>" <% } %> >
+                    <i class="input-icon fad fa-thumbs-up fa-lg"></i>
+                    <span class="line"></span>
+                  </div>
+                </div>
+                <article id="<%=index%>-page-details" <% if(!comic.monetization || comic.monetization.style != 'page'){ %> class="inactive" <% } %> >
+                  <p style="margin-top: 15px">Bulk Discount?</p>
+                  <div class="input-number-holder">
+                    <div class="input-group number">
+                      <label for="<%=index%>-bulk-items">Items Required</label>
+                      <input type="number" id="<%=index%>-bulk-items" min="0" class="input" name="bulk_items" <% if(comic.monetization){ %> value="<%=comic.monetization.bulk.items%>" <% } %> >
+                      <i class="fad fa-cart-plus fa-lg input-icon"></i>
+                      <span class="line"></span>
+                    </div>
+                    <div class="input-group number">
+                      <label for="<%=index%>-bulk-amount">Discount Amount</label>
+                      <input type="number" id="<%=index%>-bulk-amount" class="input" min="0" max="25" name="bulk_discount" <% if(comic.monetization){ %> value="<%=comic.monetization.bulk.discount%>" <% } %> >
+                      <i class="input-icon fad fa-percentage fa-lg"></i>
+                      <span class="line"></span>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+          <% } %>
+        </form>
+        <button type="button" id="comic-<%=index%>-update-submit" class="btn btn-green btn-block btn-lg comic-update-submit" form="comic-<%=index%>-details-form" data-id="<%=comic._id%>" data-index="<%=index%>" style="margin:0; margin-top: 15px">Update Comic</button>
+        <% } else { %>
+        <h2>Title</h2>
+        <p><%=capitalizer(comic.title)%></p>
+        <h2>Summary</h2>
+        <p><%=comic.summary%></p>
+          <% if(comic.website){ %>
+        <h2>Website</h2>
+        <a href="<%=comic.website%>">Go to Comic Website <i class="fad fa-arrow-right fa-lg" style="margin-left: 15px"></i></a>
+            <% if(!comic.website.includes('panelcomics.ink')){ %>
+        <p class="disclaimer" style="margin-top: 5px">This link originates outside of Panel. We are not responsible for content outside of Panel.</p>
+            <% } %>
+          <% } %>
+          <% if(comic.schedule.style != 'as-available'){ %>
+        <hr>
+        <h2>Update Frequency</h2>
+        <p>
+          <%=capitalizer(comic.title)%> tries to update <%=comic.schedule.style%> on
+            <% if(comic.schedule.type == 'monthly'){ %>
+          the
+              <% for(let date of comic.schedule.times){ %>
+                <% if(date.endsWith('1') && date != '11'){ %>
+          <%=date%>st
+                <% } else if(date.endsWith('2') && date != '12'){ %>
+          <%=date%>nd
+                <% } else if(date.endsWith('3') && date != '13'){ %>
+          <%=date%>rd
+                <% } else { %> 
+          <%=date%>th
+                <% } %>
+                <% if(comic.schedule.times.indexOf(date) == comic.schedule.times.length - 2){ %>
+          , and
+                <% } else if(comic.schedule.times.indexOf(date) == comic.schedule.times.length - 1){%>
+          .
+                <% } else { %>
+          ,
+                <% } %>
+              <% } %>
+            <% } else { %>
+              <% for(let date of comic.schedule.times){ %>
+          <%=date%>s
+                <% if(comic.schedule.times.indexOf(date) == comic.schedule.times.length - 2){ %>
+          , and
+                <% } else if(comic.schedule.times.indexOf(date) == comic.schedule.times.length - 1){%>
+          .
+                <% } else { %>
+          ,
+                <% } %>
+              <% } %>
+            <% } %>
+        </p>
+          <% } %>
+          <% if(comic.monetization && comic.monetization.status.toLowerCase() != 'denied'){ %>
+          <hr>
+          <h2>Monetization</h2>
+          <p>
+            <% if(comic.monetization.approved == true && comic.monetization.dates.approved){ %>
+              <%if(comic.monetization.style == 'comic'){ %>
+          Readers can purchase access to <%=capitalizer(comic.title)%> for $<%=(comic.monetization.cost/100).toFixed(2)%>.
+              <% } else { %>
+          Readers can purchase access to each page of <%=capitalizer(comic.title)%> for $<%=(comic.monetization.cost/100).toFixed(2)%> per page.
+              <% } %>
+            <% } else if(comic.monetization.status.toLowerCase() == 'pending'){ %>
+          <%=capitalizer(comic.title)%>'s monetization request is pending.
+            <% } %> 
+          </p>
+            <% } %>
+        <% } %>
+      </div>
+    </article>
+    <article class="comic-messages block block-cap">
+      <h1 style="background: linear-gradient(to left, #bdc3c7, #2c3e50);"><i class="fad fa-comments fa-lg"></i>Messages</h1>
+      <section id="message-box-<%=index%>" class="messages" data-user="<%=user._id%>">
+        <% if(comic.messages.length == 0) {%>
+        <p class="no-messages">Your messages will appear here.</p>
+        <% } else { %>
+          <% for(let message of comic.messages){ %>
+            <%let msgIndex = comic.messages.indexOf(message), sameUser;%>
+
+            <% if(msgIndex > 0 && message.user._id.toString() == comic.messages[msgIndex - 1].user._id.toString() && comic.messages[msgIndex - 1].date > (message.date - 86400000)){ %>
+              <%if(message.user._id.toString() == user._id.toString()){ %>
+            
+          <div class="message right same-user">
+            <p><%=message.text%></p>
+          </div>
+              <% } else { %>
+          <div class="message left user-<%=message.member_number % 3 %> same-user">
+            <p><%=message.text%></p>
+          </div>
+              <% } %>
+            <% } else { %>
+              <%if(message.user._id.toString() == user._id.toString()){ %>
+          <div class="message right">
+            <p><%=message.text%></p>
+            <span class="chip"></span>
+            <span class="profile background" style="background-image:url('<%=message.profile%>')"></span>
+            <span class="time"><%=dateStringer(message.date, 'date_time')%></span>
+          </div>
+                <% } else { %>
+          <div class="message left user-<%=message.member_number % 3 %>">
+            <p><%=message.text%></p>
+            <span class="chip"></span>
+            <span class="profile background" style="background-image:url('<%=message.profile%>')"></span>
+            <span class="time"><%=dateStringer(message.date, 'date_time')%></span>
+          </div>
+                <% } %>
+              <% } %>
+            <% } %>
+        <% } %>
+      </section>
+      <span id="typing-notice-<%=index%>" class="type-note inactive"></span>
+      <div class="input-group message">
+        <label for="message-input-<%=index%>" class="hidden">Send New Message (Press Enter or Tab to Send)</label>
+        <input type="text" id="message-input-<%=index%>" class="message-input" 
+        data-box="message-box-<%=index%>" data-index="<%=index%>"
+        data-comic="<%=comic._id%>" data-number="<%=memNum%>" data-roomkey="<%=comic.room_key%>" data-user="<%=user._id%>" data-userID="<%=user.publicID%>" 
+        data-name="<%=user.username%>" placeholder="Send New Message  (Enter or Tab to Send) &#8594;" autocomplete="off">
+        <span class="line" style="grid-column: 1"></span>
+      </div>
+    </article>
+    <article class="comic-pages block block-cap">
+      <h1 style="background: linear-gradient(to left, #93F9B9, #1D976C);"><i class="fad fa-file-alt fa-lg"></i> Pages</h1>
+      <ul class="pages">
+        <% if((comic.admin.subscriptionLevel.subType == 'free' && comic.pages.length < 50) || comic.admin.subscriptionLevel.subType != 'free'){ %>
+        <li>
+          <a href="/comics/<%=comic.public_id%>/new_page" style="justify-content:center; padding: 10px">
+            <i class="fad fa-plus fa-lg"></i> Add New Page
+          </a>
+        </li>
+        <% } %>
+        <% for(let page of comic.pages){ %>
+        <li>
+          <a href="/comics/<%=comic.public_id%>/pages/<%=page.public_id%>/edit">
+            <%if(page.page){ %>
+              <span class="page-img" style="background-image:url(<%=page.page.url%>)"></span>
+              <% } else { %>
+              <span class="page-img" style="background-image:url('https://panelapp.blob.core.windows.net/site-images/icon.svg')"></span>
+              <% } %>
+              <p>
+                <% if(page.title){ %>
+                <%=page.title%> <%if(page.published == false && !page.dates.published){ %> </br><small>(Unpublished)</small> <%}%>
+                <% } else { %>
+                Page <%=comic.pages.indexOf(page) + 1%> <%if(page.published == false && !page.dates.published){ %> </br><small>(Unpublished)</small> <%}%>
+                <% } %>
+                <% if(page.dates.updated.user._id.toString() != user._id.toString() && page.dates.updated.date > user.login.mostRecent){ %>
+                <i class="fas fa-circle" style="color:#49c49e; margin-left: 15px"></i>
+                <% } %>
+              </p>
+          </a>
+        </li>
+        <% } %>
+        </ul>
+    </article>
+    <article class="comic-members block block-cap">
+      <h1 style="background: linear-gradient(to right, #0ED2F7, #B2FEFA);"><i class="fad fa-users-cog fa-lg"></i>Members</h1>
+      <ul class="user-ul members">
+        <% if(comic.admin._id.toString() == user._id.toString()){ %>
+        <li class="btn-modal member member-new-btn" data-modal="member-new-modal" role="button" data-comictitle="<%=comic.title%>" data-comicid="<%=comic._id%>">
+          <i class="fad fa-plus fa-lg"></i>Add New Member
+        </li>
+        <% } %>
+        <% for(let member of comic.members){ %>
+          <% if(user._id.toString() == comic.admin._id.toString() || member.user._id.toString() == user._id.toString()){ %>
+            <li id="member-<%=member._id%>" class="member member-modal-btn" role="button" data-member="<%=member._id%>" data-comic="<%=comic._id%>" data-modal="member-info-modal">
+              <span class="background profile" style="background-image:url('<%=member.user.profile.url%>')"></span>
+              <span class="member-name">
+                <%=member.user.username%>
+                <% if(member.accepted == false && !member.dates.declined){ %>
+                <span class="disclaimer" style="margin-left: 5px; opacity:.7">(pending)</span>
+                <% } %>
+              </span>
+              <span class="member-icon">
+                <% if(member.user._id.toString() == comic.admin._id.toString()){ %>
+                <i class="fal fa-user-crown fa-lg"></i>
+                <% } %>
+              </span>
+            </li>
+          <% } else { %>
+            <li id="member-<%=member._id%>" class="member">
+              <span class="background profile" style="background-image:url('<%=member.user.profile.url%>')"></span>
+              <span class="member-name">
+                <%=member.user.username%>
+                <% if(member.accepted == false && !member.dates.declined){ %>
+                <span class="disclaimer" style="margin-left: 5px; opacity:.7">(pending)</span>
+                <% } %>
+              </span>
+              <span class="member-icon">
+                <% if(member.user._id.toString() == comic.admin._id.toString()){ %>
+                <i class="fal fa-user-crown fa-lg"></i>
+                <% } %>
+              </span>
+            </li>
+          <% } %>
+        <% } %>
+      </ul>
+    </article>
+    <% if(comic.purchases.length > 0){ %>
+    <article class="comic-purchases block block-cap">
+      <h1 style="background: linear-gradient(to right, #C33764, #1D2671)"><i class="fad fa-shopping-basket fa-lg"></i>Purchasers</h1>
+      <ul class="user-ul purchasers">
+        <% for(let purchase of comic.purchasers){ %>
+        <li>
+          <span class="profile" style="background-image:url('<%=purchase.user.profile.url%>')"></span>
+          <span>
+            <%=purchase.user.username%>
+          </span>
+          <span><%=purchase.title%>
+            <% if(purchase.comic.title){ %>
+            <br>
+            <span class="disclaimer">(<%=purchase.comic.title%>)</span>
+            <% } %>
+          </span>
+        </li>
+        <% } %>
+      </ul>
+    </article>
+    <% } %>
+    <% if(comic.tips.length > 0){ %>
+    <article class="comic-tips block block-cap">
+      <h1 style="background: linear-gradient(to right, #FFD200, #F7971E)"><i class="fad fa-coin fa-lg"></i>Tips</h1>
+      <ul class="user-ul tips">
+        <%for(let tip of comic.tips){ %>
+        <li>
+          <span class="profile" style="background-image:url('<%=tip.user.profile%>')"></span>
+          <span><%=tip.user.username%></span>
+          <span>- $<%=(tip.amount/100).toFixed(2)%></span>
+        </li>
+        <% } %>
+      </ul>
+    </article>
+    <% } %>
+    <article class="comic-social block block-cap">
+      <h1 style="background:linear-gradient(-240deg, #8a2387, #e94057, #f27121)"><i class="fad fa-icons fa-lg"></i>Social</h1>
+      <div class="social-input-holder">
+        <% for(let site of ['facebook', 'instagram', 'patreon', 'tumblr', 'twitter', 'youtube']){ %>
+        <div class="input-group">
+          <i class="input-icon fab fa-<%=site%> fa-lg"></i>
+          <input type="text" id="<%=site%>-<%=index%>" class="input input-social" name="<%=site%>" placeholder="<%=site%>" autocomplete="off" data-id="<%=comic._id%>">
+          <span class="line"></span>
+        </div>
+        <% } %>
+      </div>
+    </article>
+  </article>
+  <% } %>
+</article>

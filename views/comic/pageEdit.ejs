@@ -1,0 +1,283 @@
+<% include ../partials/header %>
+<input type="hidden" id="comic-id" value="<%=comic._id%>">
+<input type="hidden" id="page-id" value="<%=page._id%>">
+
+<a href="/dashboard?section=comics&subsection=comic-<%=comic._id%>"><i class="far fa-arrow-left" style="margin-right: 15px"></i>Back to Dashboard</a>
+<header>
+  <h1>Editing <%=page.title%>
+    <% if(page.page && page.published == false && (admin.subscriptionLevel.subType != 'free' || comic.pages.length < 51)){ %>
+    <button type="button" id="btn-publish" class="btn btn-sm btn-green">Publish Page</button>
+    <% } %>
+  </h1>
+</header>
+<article id="completed-page-area">
+  <h2>Completed Page</h2>
+  <% if(page.page){ %>
+    <a href="/comics/<%=comic.public_id%>/pages/<%=page.public_id%>">
+      <img id="page-img" src="<%=page.page.url%>">
+    </a>
+  <% } %>
+    <div class="uploader page-final" data-restriction="image" data-multiple="false" data-maxsize="25000000" data-meter="page-completed-meter">
+      <i class="fad fa-cloud-upload-alt fa-3x"></i>
+      <p>Drop a new page image here or <label for="page-completed-upload">Browse your images</label></p>
+      <p class="disclaimer">You can upload one image file up to 25MB.</p>
+      <div id="comic-new-meter" class="meter inactive">
+        <span>
+          <span>Uploading Completed Page...</span>
+        </span>
+      </div>
+      <div class="previews" id="page-completed-preview">
+        <p class="disclaimer inactive" style="text-align: center">Click on a file to remove it.</p>
+      </div>
+      <input type="file" id="page-completed-upload" class="hidden file-input page-final" accept="image/*" data-restriction="image" data-multiple="false" data-maxsize="25000000"
+      data-meter="page-completed-meter">
+    </div>
+  <button type="button" class="btn btn-modal" data-modal="info-modal"><i class="fad fa-cog fa-lg"></i>Page Info</button>
+  <button type="button" class="btn btn-modal" data-modal="upload-modal"><i class="fad fa-upload fa-lg"></i>Upload Materials</button>
+</article>
+<article id="discussion">
+  <h2>Discussion</h2>
+  <div class="input-group">
+    <label for="discussion-input">Send Message</label>
+    <input type="text" id="discussion-input" class="input" autocomplete="off">
+    <button type="button" id="discussion-btn" class="btn btn-green input-icon"><i class="fad fa-paper-plane fa-lg" data-fa-transform="left-1"></i></button>
+    <span class="line"></span>
+  </div>
+  <% for(let msg of page.discussion){ %>
+  <div id="msg-<%=msg._id%>" class="discussion-msg">
+    <a href="/user/<%=msg.user.username%>" class="profile-holder">
+      <span class="profile background" style="background-image:url(<%=msg.user.profile.url%>)"></span>
+      <span><%=msg.user.username%></span>
+    </a>
+    <span class="date"><%=dateStringer(msg.date, 'date_time')%></span>
+    <p><%=msg.text%></p>
+    <div class="msg-btns">
+      <% if(msg.user._id.toString() == user._id.toString()){ %>
+      <span class="owner-likes-span">
+        <i class="fas fa-thumbs-up"></i>
+        <%=msg.likes.length%>
+      </span>
+      <span class="owner-dislikes-span">
+        <i class="fas fa-thumbs-down"></i>
+        <%=msg.dislikes.length%>
+      </span>
+      <% } else { %>
+      <button type="button" id="<%=msg._id%>-like" class="like-btn like" data-id="<%=msg._id%>" data-status="like">
+        <% if(msg.likes.includes(user._id.toString())){ %>
+        <i class="fad fa-thumbs-up"></i>
+        <% } else { %>
+        <i class="far fa-thumbs-up"></i>
+        <% } %>
+        <span><%=msg.likes.length%></span>
+      </button>
+      <button type="button" id="<%=msg._id%>-dislike" class="like-btn dislike" data-id="<%=msg._id%>" data-status="dislike">
+        <% if(msg.dislikes.includes(user._id.toString())){ %>
+        <i class="fad fa-thumbs-down"></i>
+        <% } else { %>
+        <i class="far fa-thumbs-down"></i>
+        <% } %>
+        <span><%=msg.dislikes.length%></span>
+      </button>
+      <% } %>
+      <% if (admin._id.toString() == user._id.toString() || msg.user._id.toString() == user._id.toString()){ %>
+      <button type="button" class="delete-msg-btn" data-id="<%=msg._id%>">
+        <i class="fad fa-trash-alt" style="margin-right: 5px;"></i>
+        Delete
+      </button>
+      <% } %>
+    </div>
+  </div>
+  <% } %>
+</article>
+<article id="galleries">
+  <% if(page.scripts.length > 0){ %>
+  <article class="gallery" id="scripts-gallery">
+    <h2>Page Scripts</h2>
+    <% for(let script of page.scripts){ %>
+    <a href="<%=script.url%>" download class="page-script"><i class="fad fa-paragraph fa-4x"></i><%=script.name%></a>
+    <% } %>
+  </article>
+  <% } %>
+  <% for(let key of Object.keys(page.bonus_materials)){ %>
+    <% if(!key.startsWith('$') && page.bonus_materials[key].length > 0){ %>
+  <article class="gallery" id="<%=key%>-gallery">
+    <h2><%=capitalizer(key)%></h2>
+      <% for(let item of page.bonus_materials[key]){ %>
+    <span id="item-<%=item._id%>" class="gallery-item">
+        <% if(item.uploader == user._id.toString() || item.owner == user._id.toString()){ %>
+      <button type="button" class="gallery-item-delete" data-file_id="<%=item._id%>">&times;</button>
+        <% } %>
+        <% if(item.contentType == 'image'){ %>
+      <span class="background gallery-item-preview" style="background-image:url('<%=item.url%>')" data-file_id="<%=item._id%>"></span>
+        <% } else if(item.contentType == 'video'){ %>
+      <video class="gallery-item-preview" src="<%=item.url%>" data-file_id="<%=item._id%>"></video>
+        <% } else if(item.contentType == 'audio'){ %>
+      <span class="gallery-item-preview" data-file_id="<%=item._id%>"><i class="fad fa-tv-music fa-3x"></i></span>
+        <% } else { %>
+      <a href="<%=item.url%>" download><i class="fad fa-file-download fa-3x"></i><br><span class="disclaimer">Panel is not responsible for any content uploaded.</span></a>
+        <% } %>
+      <span class="file-name"><%=item.name%></span>
+    </span>
+      <% } %>
+  </article>  
+    <% } else { %>
+  <article class="gallery inactive" id="<%=key%>-gallery">
+    <h2><%=capitalizer(key.toString())%></h2>
+  </article>
+    <% } %>
+  <% } %>
+</article>
+<article class="modal small inactive" id="upload-modal" tabindex="-1" role="dialog">
+  <div class="modal-body">
+    <header class="modal-header">
+      <h1>Upload Materials</h1>
+      <button type="button" id="upload-modal-close" class="close-modal" data-modal="upload-modal">&times;</button>
+    </header>
+    <form id="upload-modal-form">
+      <div class="input-group select" style="margin-bottom: 15px">
+        <label for="upload-type-select">Upload Type</label>
+        <select id="upload-type-select" class="input">
+          <option value="script">Script</option>
+          <% if(admin.subscriptionLevel.limits.data > admin.subscriptionLevel.usage.data && member.upload == true) { %>
+          <option value="background">Background</option>
+          <option value="character">Character</option>
+          <option value="concept">Concept</option>
+          <option value="drafts">Draft</option>
+          <option value="extras">Extra</option>
+          <option value="reference">Reference</option>
+          <% } %>
+        </select>
+        <i class="far fa-chevron-down fa-lg input-icon"></i>
+        <span class="line"></span>
+      </div>
+      <div class="uploader" data-multiple="true" data-meter="upload-modal-meter">
+        <i class="fad fa-cloud-upload-alt fa-3x"></i>
+        <p>Drop files here or <label for="upload-modal-upload">Browse your images</label></p>
+        <p class="disclaimer">You can upload up to ten files. Videos can be up to 5GB in size. All others can be up to 25MB</p>
+        <div id="upload-modal-meter" class="meter inactive">
+          <span>
+            <span>Uploading Files...</span>
+          </span>
+        </div>
+        <div class="previews" id="upload-modal-preview">
+          <p class="disclaimer inactive" style="text-align: center;">Click on a file to remove it.</p>
+        </div>
+        <input type="file" id="upload-modal-upload" class="hidden file-input" data-multiple="true" data-meter="upload-modal-meter" multiple>
+      </div>
+    </form>
+    <div class="modal-footer">
+      <button type="button" class="close-modal btn" data-modal="upload-modal">Nevermind</button>
+      <button type="button" form="upload-modal-form" id="upload-modal-submit" class="btn btn-green" data-comic="<%=comic._id%>" data-page="<%=page._id%>">Upload</button>
+    </div>
+  </div>
+</article>
+<article class="modal inactive" id="preview-modal" tabindex="-1" role="dialog">
+  <div class="modal-body" style="max-width: calc(85% - 60px); width: max-content">
+    <header class="modal-header">
+      <h1 class="media-name"></h1>
+      <button type="button" class="preview-modal-close" data-modal="preview-modal">&times;</button>
+    </header>
+    <div id="preview-modal-body">
+      <div id="media-holder"></div>
+      <h2>Name</h2>
+      <p class="media-name"></p>
+      <div class="help-toggle-holder" id="public-toggle-holder">
+        <h2>
+          Make Public
+          <i class="fal fa-question-circle fa-sm help"></i>
+          <span class="help-box">Public media is shown on the page viewer shown to anyone who views your comic. Public media can be downloaded.
+          </span>
+        </h2>
+        <label for="public-toggle" class="toggle toggle-lg">
+          <input type="checkbox" id="public-toggle" class="toggle-input inactive property-toggle" autocomplete="off" name="public">
+          <div class="toggle-switch"></div>
+          <span class="toggle-span"></span>
+          <span class="toggle-active"></span>
+          <span class="toggle-inactive"></span>
+        </label>
+      </div>
+      <h2>Uploaded By:</h2>
+      <a id="media-uploader-link" class="profile-holder">
+        <span id="media-uploader-profile" class="background profile"></span>
+        <span id="media-uploader-username"></span>
+      </a>
+      <h2>Size</h2>
+      <p id="media-size"></p>
+      <h2>Upload Category</h2>
+      <p id="media-category"></p>
+      <button type="button" class="preview-modal-close btn" style="align-self:end; font-size: 1rem; grid-row:11;">Close</button>
+    </div>
+  </div>
+</article>
+<article class="modal small inactive" id="info-modal" tabindex="-1" role="dialog">
+  <div class="modal-body">
+    <header class="modal-header">
+      <h1>Page Info</h1>
+      <button type="button" class="preview-modal-close" data-modal="info-modal">&times;</button>
+    </header>
+    <form id="info-form">
+      <div class="input-group">
+        <label for="page-title">Title</label>
+        <input type="text" id="page-title" class="input" name="title" placeholder="Title" value="<%=page.title%>">
+        <span class="line"></span>
+      </div>
+      <div class="input-group" style="width: max-content;">
+        <label for="page-number">Page Number</label>
+        <input type="number" id="page-number" class="input" name="number" min="0" max="<%=comic.pages.length%>" step="1" placeholder="Page Number" value="<%=page.number%>" style="max-width: 75px; text-align: center;">
+        <span class="line"></span>
+      </div>
+      <% if(admin.birthdate && admin.birthdate < (Date.now() - 568036800000)){ %>
+      <h2>Mature Content</h2>
+      <label for="mature-toggle" class="toggle toggle-lg" style="margin:10px 0">
+        <input type="checkbox" id="mature-toggle" class="toggle-input inactive property-toggle" autocomplete="off" name="mature">
+        <div class="toggle-switch"></div>
+        <span class="toggle-span"></span>
+        <span class="toggle-active"></span>
+        <span class="toggle-inactive"></span>
+      </label>
+      <% } %>
+      <div class="input-group textarea">
+        <label for="page-description">Description</label>
+        <textarea id="page-description" class="input" name="description"><%=page.description%></textarea>
+        <span class="line"></span>
+      </div>
+      <h2>Page Credits</h2>
+      <% for(let mem of comic.members){ %>
+        <a href="/users/<%=mem.user.username%>" class="profile-holder">
+          <span class="profile background" style="background-image:url('<%=mem.user.profile.url%>')"></span>
+          <%=mem.user.username%>
+        </a>
+        <div class="input-group label" style="column-gap:0; margin-bottom:15px; row-gap: 0;">
+          <% for(let cred of Object.keys(page.credits)){ %>
+            <% if(cred != 'patrons' && !cred.startsWith('$')){ %>
+              <% if(page.credits[cred].includes(mem._id.toString())){ %>
+          <input type="checkbox" id="<%=cred%>-<%=mem._id%>" name="<%=cred%>" data-id="<%=mem._id%>" autocomplete="off" value="<%=mem._id%>" checked>
+                <% } else { %>
+          <input type="checkbox" id="<%=cred%>-<%=mem._id%>" name="<%=cred%>" data-id="<%=mem._id%>" value="<%=mem._id%>" autocomplete="off">
+              <% } %>
+          <label for="<%=cred%>-<%=mem._id%>"><%=capitalizer(cred.replace('_',' '))%></label>
+            <% } %>
+          <% } %>
+        </div>
+      <% } %>
+      <h2>Patrons</h2>
+      <div class="input-group">
+        <label for="patron-input">New Patrons</label>
+        <input type="text" id="patron-input" class="input instant-input" name="patrons" autocomplete="off" data-holder="patrons-holder" data-name="patrons" data-separator=" ">
+      </div>
+      <div id="patrons-holder" class="tag-holder">
+        <% for(let patron of page.credits.patrons){ %>
+        <span class="tag" data-content="<%=patron%>">
+          <span><%=patron%></span>
+          <button type="button" class="tag-delete instant-tag" data-name="patrons" data-content="<%=patron%>">&times;</button>
+        </span>
+        <% } %>
+      </div>
+    </form>
+    <div class="modal-footer">
+      <button type="button" class="close-modal btn btn-grey" data-modal="info-modal">Close</button>
+      <button type="button" class="btn btn-green" form="info-form" id="info-submit" form="info-form">Save Changes</button>
+    </div>
+  </div>
+</article>
+<% include ../partials/footer %>

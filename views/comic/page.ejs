@@ -1,0 +1,389 @@
+<% include ../partials/header %>
+<% let userBool;%>
+<%if(user){ %>
+<input type="hidden" id="user" value="true">
+<%userBool = true%>
+<% } else { %>
+<input type="hidden" id="user" value="false">
+<%userBool = false%>
+<% } %>
+<input type="hidden" id="comic-id" value="<%=comic.public_id%>">
+<input type="hidden" id="page-id" value="<%=page.public_id%>">
+<input type="hidden" id="page-num" value="<%=page.number%>">
+<% if(mature == true && show == true){ %>
+  <div class="mature-alert">
+    <i class="fas fa-exclamation-triangle fa-lg"></i>
+    <p>This page contains mature content.</p>
+  </div>
+<% } %>
+<div id="page-viewer">
+  <% if(page.number > 1 && comic.pages[page.number - 2].published == true){ %>
+  <a href="/comics/<%=comic.public_id%>/pages/<%=comic.pages[page.number - 2].public_id%>" id="page-prev" class="page-change"><i class="far fa-chevron-left fa-5x"></i></a>
+  <% } %>
+  <% if(mature == true){ %>
+    <% if(show == false) { %>
+  <div id="mature-block">
+    <h1>This page contains mature content.</h1>
+      <%if(!user) { %>
+    <p>Log in to view this page.</p>
+      <% } else if(!user.birthdate || user.birthdate > (Date.now() - 568036800000)) { %>
+    <p>You cannot view this page.</p>
+      <% } else if(user.matureFilter == true){ %>
+    <p>You can change this setting in your dashboard.</p>
+    <button type="button" id="show-mature" class="btn btn-outline btn-lg btn-purple">Show Anyway</button>
+      <% } %>
+  </div>
+      <% if(user && user.birthdate && user.birthdate < (Date.now() - 568036800000)) { %>
+    <img id="page-view" class="inactive" src="<%=page.page.url%>" alt="<%=page.summary%>"> 
+        <% } %>
+    <% } else { %>
+    <img id="page-view" src="<%=page.page.url%>" alt="<%=page.summary%>">  
+    <% } %>
+  <% } else if(comic.monetization.approved == true) { %>
+    <% if(free == false) { %>
+      <% if(!user){ %>
+  <div id="pay-block">
+    <h1>Loving <%=comic.title%>?</h1>
+    <p>Log In to Keep Reading!</p>
+  </div>
+      <% } else if(member == false){ %>
+  <div id="pay-block">
+    <h1>Loving <%=comic.title%>?</h1>
+    <% if(comic.monetization.style == 'whole'){ %>
+    <p>Purchase this comic to keep reading!</p>
+    <% } else { %>
+    <p>Purchase the next page to keep reading!</p>
+    <% } %>
+    <button type="button" id="purchase-page" class="modal-btn btn btn-green btn-lg" data-modal="purchase-modal">Purchase for $<%=(Number(comic.monetization.cost)/100).toFixed(2)%></button>
+  </div>
+      <% } else { %>
+  <img id="page-view" src="<%=page.page.url%>" alt="<%=page.summary%>">  
+      <% } %>
+    <% } else { %>
+  <img id="page-view" src="<%=page.page.url%>" alt="<%=page.summary%>">  
+    <% } %>
+  <% } else { %>
+  <img id="page-view" src="<%=page.page.url%>" alt="<%=page.summary%>">  
+  <% } %>
+<% if(page.number < comic.pages.length && comic.pages[page.number].published == true){ %>
+  <a href="/comics/<%=comic.public_id%>/pages/<%=comic.pages[page.number].public_id%>" id="page-next" class="page-change"><i class="far fa-chevron-right fa-5x"></i></a>
+<% } %>
+</div>
+<% if(user){ %>
+<article id="tools">
+  <% if(page.likes.includes(user._id.toString()) && member == false){ %>
+  <button type="button" id="like-btn" class="tool-btn" data-likes="<%=page.likes.length%>"><i class="fad fa-heart fa-fw text-red"></i>
+    <% if(page.likes.length != 0){ %>
+      <span style="margin-left: 5px; opacity: .5"><%=page.likes.length%></span>
+    <% } %>
+  </button>
+  <% } else if(member == false) { %>
+  <button type="button" id="like-btn" class="tool-btn" data-likes="<%=page.likes.length%>"><i class="far fa-heart fa-fw"></i>  Like 
+    <% if(page.likes.length != 0){ %>
+    <span style="margin-left: 5px; opacity: .5"><%=page.likes.length%></span>
+    <% } %>
+  </button>
+  <% } else if(member == true){ %>
+  <span class="tool-btn" style="color:#808080"><i class="fad fa-heart fa-fw"></i> 
+    <% if(page.likes.length != 0){ %>
+    <span style="margin-left: 5px; opacity: .5"><%=page.likes.length%></span>
+    <% } %>
+  </span>
+  <% } %>
+  <% if(comic.followers.includes(user._id.toString())){ %>
+  <button type="button" id="bkmk-btn" class="tool-btn btn"><i class="fad fa-bookmark fa-fw text-green"></i>  Unfollow Comic</button>
+  <% } else { %>
+  <button type="button" id="bkmk-btn" class="tool-btn btn"><i class="far fa-bookmark fa-fw"></i>  Follow Comic</button>
+  <% } %>
+  <% if(comic.monetization == true && member == false){ %>
+    <% if(comic.members.length == 1){ %>
+  <button type="button" id="tip-btn" class="tool-btn modal-btn btn" data-modal="tip-modal"><i class="fad fa-coin fa-fw"></i>  Tip <%=page.credits.lead_artist[0].username%></button>
+    <% } else { %>
+  <button type="button" id="tip-btn" class="tool-btn modal-btn btn" data-modal="tip-modal"><i class="fad fa-coin fa-fw"></i>  Tip Creators</button>  
+    <% } %>
+  <% } %>
+  <% if(member == false){ %>
+    <button type="button" id="report-btn" class="tool-btn modal-btn btn" data-modal="report-modal"><i class="far fa-flag-alt fa-fw"></i>  Report</button>
+  <% } %>
+</article>
+<% } %>
+<article id="page-info">
+  <h1><%=page.title%></h1>
+  <%if(page.description){ %>
+  <p><%=page.description%></p>
+  <% } %>
+  <button type="button" class="section-title btn">
+    <h1>Credits <i class="far fa-chevron-up fa-sm"></i></h1>
+  </button>
+  <div class="info-section">
+    <% for(let cred of Object.keys(page.credits)){ %>
+    <% if(page.credits[cred].length > 0 && cred != 'patrons'){ %>
+    <h2><%=capitalizer(cred.replace('_', ' '))%></h2>
+    <article class="credits-holder">
+      <% for(let mem of page.credits[cred]){ %>
+        <% if(mem.user.username){ %>
+      <a href="/user/<%=mem.user.username%>" class="profile-holder">
+        <span class="profile background" style="background-image:url('<%=mem.user.profile.url%>')"></span>
+        <p><%=mem.user.username%></p>
+      </a>
+        <% } %>
+      <% } %>
+    </article>
+    <% } %>
+  <% } %>
+  </div>
+  <button type="button" class="section-title btn">
+    <h1>Comic Info <i class="far fa-chevron-up fa-sm"></i></h1>
+  </button>
+  <div class="info-section" id="comic-info">
+    <img id="comic-cover" src="<%=comic.banner.url%>" alt="<%=comic.title%>'s Cover">
+    <h2><%=capitalizer(comic.title)%></h2>
+    <div>
+      <% let splitSum = comic.summary.split('\r\n'); %>
+      <% for(let p of splitSum){ %>
+      <p><%=p%></p>
+      <% } %>
+    </div>
+    <a href="/comics/<%=comic.public_id%>" id="comic-link">Go to Comic Page <i class="fal fa-arrow-right" style="margin-left: 10px;"></i></a>
+  </div>
+  <% if(['basic', 'premium'].includes(level)){ %>
+    <% for(let conMat of ['background', 'character', 'concept', 'drafts', 'extras']){ %>
+      <% if(page.bonus_materials[conMat].length > 0){ %>
+  <button type="button" class="section-title btn">
+    <h1><%=capitalizer(conMat)%> Art <i class="far fa-chevron-up fa-sm"></i></h1>
+  </button>
+  <div class="info-section conMat">
+    <% for(let media of page.bonus_materials[conMat]){ %>
+      <% if(media.public == true){ %>
+        <% if(media.contentType.split('/')[0] == 'image'){ %>
+      <button type="button" class="modal-btn preview-button" data-modal="view-modal" data-url="<%=media.url%>" data-type="image" style="background-image:url('<%=media.url%>')"></button>
+        <% } else if(media.contentType.split('/')[0] == 'video'){ %>
+      <video class="modal-btn preview-button" src="<%=media.url%>" data-modal="view-modal" data-url="<%=media.url%>" data-type="video"></video>
+        <% } else { %>
+      <a href="<%=media.url%>" download class="preview-button" data-type="link">
+        <i class="fas fa-file-download fa-5x"></i>
+        <p><%=media.name%></p>
+      </a>  
+        <% } %>
+      <% } %>
+    <% } %>
+  </div>
+      <% } %>
+    <% } %>
+  <% } %>
+</article>
+<article id="pages" class="<%=userBool%>">
+  <h1>Pages</h1>
+  <article id="page-list">
+    <%for(let otrPage of comic.pages){ %>
+      <%if(otrPage.published == true){ %>
+        <%let img; %>
+        <% if(comic.monetization.approved == true){ %>
+          <% if((!user && otrPage.number > comic.monetization.free)|| (member == false && comic.monetization.style == 'whole' && otrPage.number > comic.monetization.free && !comic.purchases.includes(user._id.toString())) || (member == false && comic.monetization.style == 'page' && comic.monetization.free < otrPage.number && !otrPage.purchasers.includes(user._id.toString()))){ %>
+            <% img = "https://panelapp.blob.core.windows.net/site-images/purchaseBlock-01.svg"; %>
+          <% } else if(otrPage.mature == true && (!user || user.matureFilter == true)){%>
+            <% img = "https://panelapp.blob.core.windows.net/site-images/matureBlock.svg" %>
+          <% } else { %>
+            <% img = otrPage.page.url %>
+          <% } %>
+        <% } else if(otrPage.mature == true){ %>
+          <%if(!user || user.matureFilter == true){ %>
+            <% img = "https://panelapp.blob.core.windows.net/site-images/matureBlock.svg" %>
+          <% } else { %>
+            <% img = otrPage.page.url %>
+          <% } %>
+        <% } else { %>
+        <% img = otrPage.page.url %>
+        <% } %>
+        <%if(page.public_id == otrPage.public_id){ %>
+      <span class="page-link this-page">
+        <span class="page-img background" style="background-image:url('<%=img%>')"></span>
+        <span class="page-name"><%=capitalizer(otrPage.title)%></span>
+      </span>
+        <% } else { %>
+      <a href="/comics/<%=comic.public_id%>/pages/<%=otrPage.public_id%>" class="page-link">
+        <span class="page-img" style="background-image:url('<%=img%>')"></span>
+        <span class="page-name"><%=capitalizer(otrPage.title)%></span>
+      </a>
+        <% } %>
+      <% } %>
+    <% } %>
+  </article>
+</article>
+<article id="comments">
+  <%if(user || page.comments.length > 0) { %>
+  <h1>Comments</h1>
+  <% } %>
+  <%if(user){ %>
+  <div class="input-group">
+    <label for="comment-input">Comment</label>
+    <input type="text" id="comment-input" class="input" placeholder="What would you like to say?" autocomplete="off">
+    <span class="line"></span>
+    <button type="button" id="new-comment" class="btn btn-green input-icon" data-comic="<%=comic.public_id%>" data-page="<%=page.public_id%>">Send</button>
+  </div>
+  <% } %>
+  <% for(let comment of page.comments){ %>
+  <article id="comment-<%=comment.public_id%>" class="comment">
+    <a href="/user/<%=comment.user.username%>" class="comment-link">
+      <span class="profile-img background" style="background-image:url('<%=comment.user.profileImg%>')"></span>
+      <span class="comment-user"><%=comment.user.username%></span>
+      <span class="comment-date"><%=dateStringer(comment.date)%></span>
+    </a>
+    <p class="comment-text"><%=comment.text%></p>
+    <% if(user){ %>
+      <% if(comment.user.username == user.username){ %>
+    <span class="comment-like-grey"><i class="fas fa-heart fa-lg fa-fw"></i> <%=comment.likes.length%></span>
+      <% } else if(comment.likes.includes(user._id.toString())){ %>
+    <button type="button" class="comment-like unlike" data-id="<%=comment.public_id%>" data-likes="<%=comment.likes.length%>"><i class="fas fa-heart fa-lg fa-fw"></i> <%=comment.likes.length%></button>
+      <% } else { %>
+    <button type="button" class="comment-like" data-id="<%=comment.public_id%>" data-likes="<%=comment.likes.length%>"><i class="fal fa-heart fa-lg fa-fw"></i> <%=comment.likes.length%></button>
+      <% } %>
+      <% if(comment.user.username == user.username){ %>
+    <button type="button" class="comment-delete" data-id="<%=comment.public_id%>"><i class="fal fa-trash-alt fa-lg fa-fw"></i> Delete</button>
+      <% } else { %>
+    <button type="button" class="comment-report" data-id="<%=comment.public_id%>"><i class="fal fa-flag fa-lg fa-fw"></i> Report</button>
+      <% } %>
+    <% } %>
+  </article>
+  <% } %>
+</article>
+<% if(user){ %>
+<div class="modal inactive" id="report-modal" tabindex="-1" role="dialog">
+  <div class="modal-body">
+    <div class="modal-header">
+      <h3>
+        Report <%=page.title%>
+      </h3>
+    </div>
+    <div class="modal-info">
+      <form id="report-form">
+        <input type="radio" id="plagiarism" class="input-radio" name="report" autocomplete="off">
+        <label for="plagiarism" class="radio-label">
+          <span class="outer-dot"></span>
+          <span class="inner-dot"></span>
+          This page plagiarises someone else's work.
+        </label>
+        <input type="radio" id="copyright" class="input-radio" name="report" autocomplete="off">
+        <label for="copyright" class="radio-label">
+          <span class="outer-dot"></span>
+          <span class="inner-dot"></span>
+          This page infringes on another's copyright or trademark.
+        </label>
+        <% if(page.mature == false){ %>
+        <input type="radio" id="mature" class="input-radio" name="report" autocomplete="off">
+        <label for="mature" class="radio-label">
+          <span class="outer-dot"></span>
+          <span class="inner-dot"></span>
+          This page should be marked mature.
+        </label>
+        <% } %>
+        <input type="radio" id="offensive" class="input-radio" name="report" autocomplete="off">
+        <label for="offensive" class="radio-label">
+          <span class="outer-dot"></span>
+          <span class="inner-dot"></span>
+          <span>This page is offensive or otherwise violates our <a href="/legal/tos">Terms of Service</a>.</span>
+        </label>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="close-modal btn btn-grey" data-modal="report-modal">Nevermind</button>
+      <button type="button" class="btn btn-red" id="report-submit">Send Report</button>
+    </div>
+  </div>
+</div>
+  <% if(comic.monetization == true){ %>
+<div class="modal inactive" id="tip-modal" tabindex="-1" role="dialog">
+  <div class="modal-body">
+    <div class="modal-header">
+      <h3>
+        Tip 
+        <% if(comic.members.length == 1){ %>
+        <%=comic.members[0].username%>
+        <% } else { %>
+         the Creators
+        <% } %>
+      </h3>
+    </div>
+    <div class="modal-info">
+      <p>Thanks for supporting <%=capitalizer(comic.title)%>!</p>
+      <p><small>Tips can be from $1 to $50</small></p>
+      <div class="input-group number">
+        <label for="tip-amount">Tip Amount (in US Dollars)</label>
+        <input type="number" id="tip-amount" class="input" max="50.00" min="1.00" step=".01" placeholder="Tip Amount (USD)">
+        <span class="line"></span>
+        <i class="fas fa-dollar-sign fa-lg fa-fw"></i>
+      </div>
+      <div class="input-group">
+        <label for="tip-comment">Message for the Creators? This will only be shown to the creators. (max 300 characters)</label>
+        <textarea id="tip-comment" class="input" placeholder="Message for the Creators? This is only shown to the creators. (max 300 characters)" autocomplete="off"></textarea>
+        <span class="line"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="close-modal btn btn-grey" data-modal="tip-modal">Nevermind</button>
+      <button type="button" class="btn btn-green" id="tip-submit">Tip</button>
+    </div>
+  </div>
+</div>
+  <% } %>
+<div class="modal small inactive" id="purchase-modal" tabindex="-1" role="dialog">
+  <div class="modal-body">
+    <div class="modal-header">
+      <h3>
+          Add
+          <% if(comic.monetization.style == 'whole'){ %>
+        <%=capitalizer(comic.title)%>  
+          <% } else { %>
+        Pages from <%=capitalizer(comic.title)%>
+          <% } %>
+          to Bag
+      </h3>
+    </div>
+    <div class="modal-info">
+        <p>Thanks for supporting <%=capitalizer(comic.title)%>!</p>
+        <p id="cost">
+          <% if(comic.monetization.style == 'whole'){ %>
+          Cost of Entire Comic: $<%=(Number(comic.monetization.cost)/100).toFixed(2)%>
+          <% } else { %>
+          Cost for a single page: $<%=(Number(comic.monetization.cost)/100).toFixed(2)%>
+            
+          <% } %>
+        </p>
+        <% if(comic.monetization.bulk.items){ %>
+        <p style="font-size:.7rem;opacity:.8;margin-top:0">
+          Purchase <%=comic.monetization.bulk.items%> pages to get a <%=comic.monetization.bulk.amount * 100%>% discount!
+        </p>
+        <% } %>
+        <% if(comic.monetization.style == 'page'){ %>
+        <form id="pages-form">
+          <% if(comic.pages.length > 1){ %>
+          <div id="page-label-holder">
+            <h4 style="width:100%; margin-top:0">Choose pages to add to bag:</h4>
+            <% for(let page of comic.pages){ %>
+              <% if(!page.purchasers.includes(user._id.toString()) && (page.mature == false || (page.mature == true && show == true)) && page.number > comic.monetization.free){ %>
+            <input type="checkbox" id="<%=page.public_id%>-input" class="hidden page-input" value="<%=page.public_id%>">
+            <label for="<%=page.public_id%>-input" class="page-label"><%=page.title%></label>
+              <% } %>
+            <% } %>
+          </div>
+          <% } %>
+        </form>
+        <% } %>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="close-modal btn btn-grey" data-modal="purchase-modal">Nevermind</button>
+      <button type="button" class="btn btn-purple" id="add-to-cart" data-page="<%=page.public_id%>" data-comic="<%=comic.public_id%>" data-style="<%=comic.monetization.style%>">Add to Bag</button>
+    </div>
+  </div>
+</div>
+<div class="modal inactive" id="view-modal" tabindex="-1" role="dialog">
+  <div class="modal-body" id="view-body">
+    <div class="modal-header">
+      <h3 id="view-title"></h3>
+      <button type="button" class="close-modal" data-modal="view-modal">&times;</button>
+    </div>
+  </div>
+</div>
+<% } %>
+<span id="alert-box" class="inactive"></span>
+<% include ../partials/footer %>
